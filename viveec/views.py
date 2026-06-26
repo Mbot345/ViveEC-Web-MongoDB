@@ -11,8 +11,8 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-client = MongoClient("mongodb+srv://Admin:UDLA@clusterudla01.5ojogg0.mongodb.net/?appName=ClusterUDLA01")
-db = client['ViveEC'] 
+client = MongoClient("mongodb+srv://<usuario>:<password>@clusterudla01.5ojogg0.mongodb.net/?appName=ClusterUDLA01") # user: Admin, psswd: UDLA
+db = client['NombreBaseDeDatos']  #Nombre: ViveEC
 
 # LOGIN USUARIO
 def login_usuario(request):
