@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes Usuario - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metrics-container { display:flex; gap:24px; margin-bottom:32px; }
+        .metric-card { background-color:#181818; border:1px solid #282828; padding:24px; border-radius:8px; flex:1; }
+        .metric-value { font-size:36px; font-weight:800; color:#1ed760; margin-top:8px; }
+        .dashboard-grid { display:grid; grid-template-columns:2fr 1fr; gap:24px; margin-top:20px; }
+        .chart-card, .top-card { background-color:#181818; border:1px solid #282828; border-radius:8px; padding:24px; }
+        table { width:100%; border-collapse:collapse; text-align:left; color:#ffffff; }
+        th { padding:12px; border-bottom:1px solid #3e3e3e; color:#b3b3b3; font-size:12px; text-transform:uppercase; }
+        td { padding:12px; border-bottom:1px solid #282828; font-size:14px; }
+        
+        /* Estilo corregido para el corazón blanco sobre fondo verde */
+        .heart-box {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1ed760; /* Fondo verde */
+            color: #ffffff;             /* Corazón blanco */
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;         /* Bordes ligeramente redondeados */
+            margin-right: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dashboard-body">
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge">Oyente</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-usuario/" class="nav-item">Inicio</a>
+                <a href="/descubrir-albumes/" class="nav-item">Descubrir</a>
+                <a href="/biblioteca-usuario/" class="nav-item">Mi Biblioteca</a>
+                <a href="/suscripcion-usuario/" class="nav-item">Suscripción</a>
+                <a href="/reportes-usuario/" class="nav-item active">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding:40px 32px;">
+        <div class="content-header" style="margin-bottom:30px;">
+            <h1 style="color:#fff; margin:0; font-size:32px; font-weight:800;">Tu Actividad Musical</h1>
+            <p style="color:#b3b3b3; margin-top:5px;">Resumen de tus hábitos de escucha y preferencias musicales.</p>
+        </div>
+
+        <div class="metrics-container">
+            <div class="metric-card">
+                <span style="color:#b3b3b3; font-size:14px; font-weight:bold;">Tiempo de escucha (Mes)</span>
+                <div class="metric-value">{{ tiempo_mes }}</div>
+            </div>
+            <div class="metric-card">
+                <span style="color:#b3b3b3; font-size:14px; font-weight:bold;">Tiempo de escucha (Semana)</span>
+                <div class="metric-value">{{ tiempo_semana }}</div>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="chart-card">
+                <h3 style="color:#fff; margin-top:0; margin-bottom:20px; font-size:18px;">Top 3 Canciones</h3>
+                <div style="position:relative; height:300px; width:100%;">
+                    <canvas id="chartCanciones"></canvas>
+                </div>
+            </div>
+            <div class="top-card">
+                <h3 style="color:#fff; margin-top:0; margin-bottom:15px; font-size:18px;">Géneros Favoritos</h3>
+                <table>
+                    <thead><tr><th>Género</th><th>Escuchas</th></tr></thead>
+                    <tbody>
+                        {% for genero, cantidad in generos_tabla %}
+                        <tr><td>{{ genero }}</td><td style="color:#1ed760; font-weight:bold;">{{ cantidad }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" style="text-align:center; color:#b3b3b3;">Sin registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="top-card">
+                <h3>Top Artistas del Mes</h3>
+                <table>
+                    <thead><tr><th>Artista</th><th>Tiempo Escuchado</th></tr></thead>
+                    <tbody>
+                        {% for a in artistas_top %}
+                        <tr><td>{{ a.0 }}</td><td style="color:#1ed760">{{ a.1 }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" style="text-align:center; color:#b3b3b3;">Sin registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="top-card">
+                <h3>Canciones con Like</h3>
+                <ul style="color:#fff; list-style:none; padding:0;">
+                    {% for l in likes %}
+                    <li style="padding: 8px 0; border-bottom: 1px solid #282828; display: flex; align-items: center;">
+                        <span class="heart-box">♥</span> {{ l }}
+                    </li>
+                    {% empty %}
+                    <li style="color:#b3b3b3;">No tienes canciones con "Like" aún.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="top-card" style="margin-top: 24px;">
+            <h3>Historial Reciente</h3>
+            <table>
+                <thead><tr><th>Canción</th><th>Duración</th><th>Fecha</th></tr></thead>
+                <tbody>
+                    {% for h in historial %}
+                    <tr><td>{{ h.0 }}</td><td>{{ h.1 }}</td><td>{{ h.2|date:"d/m/Y" }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="3" style="text-align:center; color:#b3b3b3;">No hay historial disponible</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    {{ nombres_canciones|json_script:"datos-nombres" }}
+    {{ repros_canciones|json_script:"datos-repros" }}
+
+    <script>
+        const nombresCanciones = JSON.parse(document.getElementById('datos-nombres').textContent || '[]');
+        const reproducciones = JSON.parse(document.getElementById('datos-repros').textContent || '[]');
+        
+        const ctx = document.getElementById('chartCanciones').getContext('2d');
+        
+        new Chart(ctx, {
+            type:'bar',
+            data:{
+                labels:nombresCanciones,
+                datasets:[{
+                    label:'Reproducciones',
+                    data:reproducciones,
+                    backgroundColor:'rgba(30,215,96,0.2)',
+                    borderColor:'#1ed760',
+                    borderWidth:2,
+                    borderRadius:4
+                }]
+            },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins:{ legend:{ display:false } },
+                scales:{
+                    y:{ beginAtZero:true, grid:{ color:'#282828' }, ticks:{ color:'#b3b3b3' } },
+                    x:{ grid:{ display:false }, ticks:{ color:'#b3b3b3' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

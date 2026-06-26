@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descubrir - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+</head>
+<body class="dashboard-body"> 
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Oyente</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-usuario/" class="nav-item">Inicio</a>
+                <a href="/descubrir-albumes/" class="nav-item active">Descubrir</a>
+                <a href="/biblioteca-usuario/" class="nav-item">Mi Biblioteca</a>
+                <a href="/suscripcion-usuario/" class="nav-item">Suscripción</a>
+                <a href="/reportes-usuario/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px; display: flex; flex-direction: column; gap: 40px;">
+        <div class="welcome-card">
+            <h1>Descubrir música</h1>
+            <p>Explora nuestro catálogo completo de álbumes y artistas.</p>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">Todos los Álbumes</h2>
+            <div id="albums-grid" class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for alb in albumes %}
+                <div class="album-card" 
+                     style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                     onmouseover="this.style.backgroundColor='#282828'" 
+                     onmouseout="this.style.backgroundColor='#181818'"
+                     onclick="window.location.href='/album/{{ alb.idAlbum }}/'">
+                    <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #1ed760 0%, #122c19 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">💿</div>
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ alb.nombre }}</h3>
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ alb.artista.nombre }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="container-ver-mas-albumes" style="text-align: center; margin-top: 30px; display: none;">
+                <button id="ver-mas-albumes-btn" style="background: transparent; color: #fff; border: 1px solid #fff; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: bold;">Ver más</button>
+            </div>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">Artistas</h2>
+            <div id="artistas-grid" class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for art in artistas %}
+                <div class="artista-card" 
+                     style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                     onmouseover="this.style.backgroundColor='#282828'" 
+                     onmouseout="this.style.backgroundColor='#181818'"
+                     onclick="window.location.href='/artista/{{ art.id }}/'">
+                    <div class="artist-avatar" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #22c55e 0%, #0a2211 100%); border-radius: 50%; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">👤</div>
+                    <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 16px; font-weight: bold; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ art.nombre }}</h3>
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px; text-align: center;">Artista</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="container-ver-mas-artistas" style="text-align: center; margin-top: 30px; display: none;">
+                <button id="ver-mas-artistas-btn" style="background: transparent; color: #fff; border: 1px solid #fff; padding: 10px 24px; border-radius: 20px; cursor: pointer; font-weight: bold;">Ver más</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function configurarPaginacion(cards, btn, container, limiteInicial) {
+            if (cards.length > limiteInicial) {
+                container.style.display = 'block';
+                cards.forEach((card, index) => { if (index >= limiteInicial) card.style.display = 'none'; });
+                btn.addEventListener('click', () => {
+                    let hidden = container.parentElement.querySelectorAll('[style*="display: none"]');
+                    for (let i = 0; i < limiteInicial && i < hidden.length; i++) { hidden[i].style.display = 'block'; }
+                    if (container.parentElement.querySelectorAll('[style*="display: none"]').length === 0) container.style.display = 'none';
+                });
+            }
+        }
+        configurarPaginacion(document.querySelectorAll('.album-card'), document.getElementById('ver-mas-albumes-btn'), document.getElementById('container-ver-mas-albumes'), 10);
+        configurarPaginacion(document.querySelectorAll('.artista-card'), document.getElementById('ver-mas-artistas-btn'), document.getElementById('container-ver-mas-artistas'), 5);
+    </script>
+</body>
+</html>

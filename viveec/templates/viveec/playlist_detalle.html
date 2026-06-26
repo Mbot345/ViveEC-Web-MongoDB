@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ playlist.nombrePlaylist }} - ViveEC</title>
+    <style>
+        body { margin: 0; background-color: #121212; font-family: sans-serif; color: #fff; }
+        .playlist-header { background: linear-gradient(to bottom, #114b25, #121212); padding: 40px 32px; display: flex; gap: 24px; align-items: flex-end; }
+        .playlist-cover { width: 192px; height: 192px; background: radial-gradient(circle, #1ed760, #082411); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 72px; box-shadow: 0 4px 60px rgba(0,0,0,0.5); }
+        .btn-toggle { border: 1px solid #b3b3b3; background: transparent; color: #fff; padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .btn-toggle.guardado { background-color: #1ed760; color: #000; border-color: #1ed760; }
+        .btn-circular { width: 40px; height: 40px; border-radius: 50%; background: #1ed760; border: none; color: #000; font-size: 24px; cursor: pointer; font-weight: bold; }
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .custom-table th { padding: 12px; border-bottom: 1px solid #282828; color: #b3b3b3; text-align: left; font-size: 14px; }
+        .custom-table td { padding: 12px; color: #b3b3b3; border-bottom: 1px solid #1a1a1a; }
+        
+        #menu-agregar { display:none; position:absolute; background:#282828; padding:15px; border-radius:8px; width:300px; height: 300px; z-index:100; margin-top: 10px; overflow-y: auto; }
+        
+        #toast { visibility: hidden; background-color: #1ed760; color: #000; padding: 16px; position: fixed; z-index: 1000; right: 30px; bottom: 30px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    </style>
+</head>
+<body>
+
+    <header class="playlist-header">
+        <div class="playlist-cover">🎵</div>
+        <div>
+            <span style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Playlist</span>
+            <h1 style="font-size: 48px; margin: 4px 0; font-weight: 900;">{{ playlist.nombrePlaylist }}</h1>
+            <p style="margin: 0; color: #b3b3b3; font-size: 16px; margin-bottom: 8px;">
+                {{ playlist.descripcionPlaylist }}
+            </p>
+            <p style="margin: 0; color: #b3b3b3; font-size: 14px;">
+                <strong>{{ playlist.propietario.nombre }}</strong> • {{ canciones|length }} canciones
+            </p>
+        </div>
+    </header>
+
+    <main style="padding: 32px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            {% if not es_propietario %}
+                <button id="btn-playlist" onclick="togglePlaylist('{{ playlist.idPlaylist }}')" class="btn-toggle {% if ya_guardado %}guardado{% endif %}">
+                    {% if ya_guardado %}Guardado{% else %}Guardar +{% endif %}
+                </button>
+            {% endif %}
+
+            {% if es_propietario or ya_guardado %}
+            <button onclick="toggleAgregarMenu()" class="btn-circular">+</button>
+            {% endif %}
+        </div>
+
+        <div id="menu-agregar">
+            <h4 style="margin-top:0; color:#fff;">Elige una canción:</h4>
+            <div id="lista-canciones">
+                {% for song in todas_las_canciones %}
+                <div onclick="agregarCancion('{{ song.id }}')" 
+                     style="cursor:pointer; padding:10px; border-bottom:1px solid #444; color:#b3b3b3;"
+                     onmouseover="this.style.color='#fff'; this.style.backgroundColor='#333'" 
+                     onmouseout="this.style.color='#b3b3b3'; this.style.backgroundColor='transparent'">
+                    {{ song.nombre }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Título</th>
+                    <th>Duración</th>
+                    {% if es_propietario or ya_guardado %}<th></th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in canciones %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td style="font-weight: bold; color: #fff;">
+                        <a href="{% url 'reproducir_cancion_detalle' c.id %}" style="text-decoration: none; color: #fff;">{{ c.nombre }}</a>
+                    </td>
+                    <td class="duracion-segundos" data-segundos="{{ c.duracion }}">{{ c.duracion }}</td>
+                    {% if es_propietario or ya_guardado %}
+                    <td>
+                        <button onclick="eliminarCancion('{{ playlist.idPlaylist }}', '{{ c.id }}')" style="background:transparent; border:none; color:red; cursor:pointer; font-size: 18px;">−</button>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <div id="toast">Acción realizada correctamente!</div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.duracion-segundos').forEach(celda => {
+            const s = parseInt(celda.getAttribute('data-segundos'));
+            if (!isNaN(s)) { // Validación extra
+                celda.innerText = Math.floor(s/60) + ":" + (s%60 < 10 ? '0' : '') + (s%60);
+            }
+        });
+    });
+
+    function toggleAgregarMenu() {
+        const menu = document.getElementById('menu-agregar');
+        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+    }
+
+    function agregarCancion(idCancion) {
+        fetch('/agregar-cancion/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ 'idPlaylist': '{{ playlist.idPlaylist }}', 'idCancion': idCancion })
+        })
+        .then(() => {
+            const toast = document.getElementById("toast");
+            toast.innerText = "¡Canción agregada!";
+            toast.className = "show";
+            setTimeout(() => { window.location.reload(); }, 800);
+        });
+    }
+
+    function eliminarCancion(idPlaylist, idCancion) {
+        fetch('/eliminar-cancion/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ 'idPlaylist': idPlaylist, 'idCancion': idCancion })
+        })
+        .then(() => {
+            const toast = document.getElementById("toast");
+            toast.innerText = "¡Canción eliminada!";
+            toast.className = "show";
+            setTimeout(() => { window.location.reload(); }, 800);
+        });
+    }
+
+    function togglePlaylist(idPlaylist) {
+        fetch('/toggle-playlist/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ 'idPlaylist': idPlaylist })
+        })
+        .then(() => window.location.reload());
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Biblioteca - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <style>
+        /* Estilos del Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background-color: #181818; padding: 24px; border-radius: 8px; width: 100%; max-width: 400px; border: 1px solid #282828; color: #fff; }
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group input, .form-group select, .form-group textarea { background-color: #282828; border: 1px solid #3e3e3e; padding: 10px; border-radius: 4px; color: #fff; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+        .btn-secondary { background-color: transparent; color: #b3b3b3; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body class="dashboard-body"> 
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Oyente</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-usuario/" class="nav-item">Inicio</a>
+                <a href="/descubrir-albumes/" class="nav-item">Descubrir</a>
+                <a href="/biblioteca-usuario/" class="nav-item active">Mi Biblioteca</a>
+                <a href="/suscripcion-usuario/" class="nav-item">Suscripción</a>
+                <a href="/reportes-usuario/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px; display: flex; flex-direction: column; gap: 40px;">
+        
+        <div class="welcome-card">
+            <h1>Mi Biblioteca</h1>
+            <p>Gestiona tus playlists personales y descubre lo que otros usuarios están creando.</p>
+            <button class="btn-crear" onclick="abrirModal('modalCrear')" style="margin-top: 15px; background: #1ed760; color: #000; padding: 10px 20px; border-radius: 20px; border:none; cursor:pointer; font-weight:bold;">
+                Crear Nueva Playlist +
+            </button>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">Tus Playlists</h2>
+            <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for p in mis_playlists %}
+                <div class="album-card" style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                      onmouseover="this.style.backgroundColor='#282828'" onmouseout="this.style.backgroundColor='#181818'" onclick="verPlaylist('{{ p.idPlaylist }}')">
+                    <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #1ed760 0%, #122c19 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">🎵</div>
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">{{ p.nombrePlaylist }}</h3>
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px;">{{ p.visibilidad }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">Playlists de la Comunidad</h2>
+            <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for c in comunidad_playlists %}
+                <div class="album-card" style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                      onmouseover="this.style.backgroundColor='#282828'" onmouseout="this.style.backgroundColor='#181818'" onclick="verPlaylist('{{ c.idPlaylist }}')">
+                    <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #535353 0%, #121212 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">🎵</div>
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">{{ c.nombrePlaylist }}</h3>
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px;">Por: {{ c.propietario }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <div id="modalCrear" class="modal">
+        <div class="modal-content">
+            <h2>Crear Nueva Playlist</h2>
+            <form method="POST" action="/crear-playlist/">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" name="nombre" required placeholder="Ej: Mis Favoritos">
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Visibilidad</label>
+                    <select name="visibilidad">
+                        <option value="Privada">Privada</option>
+                        <option value="Pública">Pública</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalCrear')">Cancelar</button>
+                    <button type="submit" style="background-color:#1ed760; color:#000; border:none; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function verPlaylist(id) { window.location.href = '/playlist/' + id + '/'; }
+        function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+    </script>
+</body>
+</html>

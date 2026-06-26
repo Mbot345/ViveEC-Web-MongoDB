@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suscripción - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+</head>
+<body class="dashboard-body"> 
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Oyente</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-usuario/" class="nav-item">Inicio</a>
+                <a href="/descubrir-albumes/" class="nav-item">Descubrir</a>
+                <a href="/biblioteca-usuario/" class="nav-item">Mi Biblioteca</a>
+                <a href="/suscripcion-usuario/" class="nav-item active">Suscripción</a>
+                <a href="/reportes-usuario/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px; display: flex; flex-direction: column; gap: 40px; align-items: center;">
+        
+        {% if tiene_suscripcion %}
+            <div class="welcome-card" style="text-align: left; border: 1px solid #1ed760; background: #181818; padding: 40px; border-radius: 16px; width: 100%; max-width: 1000px;">
+                <h1 style="color: #1ed760; margin-bottom: 15px; font-size: 32px;">Tu suscripción actual: {{ nombre_plan }}</h1>
+                <p style="color: #fff; font-size: 18px;">Gracias por ser parte de ViveEC. Disfrutas de todos los beneficios premium.</p>
+            </div>
+        {% else %}
+            <div class="welcome-card" style="text-align: left; width: 100%; max-width: 1000px;">
+                <h1 style="margin: 0;">Elige tu plan ViveEC</h1>
+                <p style="margin: 10px 0 0 0;">Desbloquea una experiencia sin límites. Selecciona el plan que mejor se adapte a ti.</p>
+            </div>
+
+            {% if error_formulario %}
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 16px; border-radius: 8px; text-align: left; width: 100%; max-width: 1000px;">
+                {{ error_formulario }}
+            </div>
+            {% endif %}
+
+            <div class="planes-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; width: 100%; max-width: 1000px;">
+                {% for plan, precio in planes %}
+                <div class="album-card" style="background-color: #181818; padding: 30px; border-radius: 16px; border: 1px solid #282828; text-align: center;">
+                    <h3 style="color: #fff; font-size: 24px; margin-bottom: 16px;">{{ plan }}</h3>
+                    <p style="color: #1ed760; font-size: 32px; font-weight: bold; margin-bottom: 24px;">${{ precio }}</p>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="tipoSuscripcion" value="{{ plan }}">
+                        <input type="hidden" name="monto" value="{{ precio }}">
+                        <input type="hidden" name="metodoPago" value="Tarjeta">
+                        <button type="submit" style="width: 100%; padding: 12px; background-color: #1ed760; border: none; border-radius: 20px; color: #000; font-weight: bold; cursor: pointer;">
+                            Suscribirse
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="historial-container" style="width: 100%; max-width: 1000px; margin-top: 20px;">
+            <h2 style="color: #fff; margin-bottom: 20px;">Historial de Actividad</h2>
+            <table style="width: 100%; border-collapse: collapse; background: #181818; border-radius: 12px; overflow: hidden; color: #fff;">
+                <thead style="background: #282828; color: #1ed760;">
+                    <tr style="text-align: left;">
+                        <th style="padding: 16px;">#</th>
+                        <th style="padding: 16px;">Tipo de Plan</th>
+                        <th style="padding: 16px;">Monto</th>
+                        <th style="padding: 16px;">Fecha Inicio</th>
+                        <th style="padding: 16px;">Fecha Fin</th>
+                    </tr>
+                </thead>
+                <tbody style="color: #fff;">
+                    {% for fila in historial_pagos %}
+                    <tr style="border-bottom: 1px solid #282828;">
+                        <td style="padding: 16px;">{{ forloop.counter }}</td>
+                        <td style="padding: 16px;">{{ fila.tipoSuscripcion }}</td>
+                        <td style="padding: 16px;">${{ fila.monto }}</td>
+                        <td style="padding: 16px;">{{ fila.fechaInicioSuscripcion }}</td>
+                        <td style="padding: 16px;">{{ fila.fechaFinSuscripcion }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="padding: 20px; text-align: center; color: #aaa;">
+                            No tienes historial de suscripciones.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

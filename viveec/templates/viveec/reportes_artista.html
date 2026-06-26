@@ -1,0 +1,136 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes Analíticos - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .metrics-container { display: flex; gap: 24px; margin-bottom: 32px; }
+        .metric-card { background-color: #181818; border: 1px solid #282828; padding: 24px; border-radius: 8px; flex: 1; }
+        .metric-value { font-size: 36px; font-weight: 800; color: #1ed760; margin-top: 8px; }
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-top: 20px; }
+        .chart-card, .top-card { background-color: #181818; border: 1px solid #282828; border-radius: 8px; padding: 24px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; color: #fff; margin-top: 10px; }
+        th { padding: 12px; border-bottom: 1px solid #3e3e3e; color: #b3b3b3; font-size: 12px; text-transform: uppercase; }
+        td { padding: 12px; border-bottom: 1px solid #282828; font-size: 14px; }
+        .podium-1 { color: #f1c40f; font-weight: bold; }
+        .podium-2 { color: #bdc3c7; font-weight: bold; }
+        .podium-3 { color: #e67e22; font-weight: bold; }
+    </style>
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge">Artista</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-artista/" class="nav-item">Inicio</a>
+                <a href="/gestion-albumes/" class="nav-item">Administrar Canciones</a>
+                <a href="/regalias-artista/" class="nav-item">Regalías</a>
+                <a href="/reportes-artista/" class="nav-item active">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/login-artista/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px;">
+        <div class="content-header" style="margin-bottom: 30px;">
+            <h1 style="color: #fff; margin: 0; font-size: 32px; font-weight: 800;">Panel Analítico de Artista</h1>
+            <p style="color: #b3b3b3; margin: 5px 0 0 0;">Métricas clave de rendimiento y consumo de tu catálogo musical.</p>
+        </div>
+
+        <div class="metrics-container">
+            <div class="metric-card">
+                <span style="color: #b3b3b3; font-size: 14px; font-weight: bold;">Oyentes Únicos (Este Mes)</span>
+                <div class="metric-value">{{ oyentes_mensuales }}</div>
+            </div>
+            <div class="metric-card">
+                <span style="color: #b3b3b3; font-size: 14px; font-weight: bold;">Mercado Principal</span>
+                <div class="metric-value" style="color: #fff;">{{ pais_mas_escuchado }}</div>
+                <span style="color: #b3b3b3; font-size: 12px;">Con un total de {{ oyentes_pais }} oyentes</span>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="chart-card">
+                <h3 style="color: #fff; margin-top: 0; margin-bottom: 20px; font-size: 18px;">Rendimiento General por Canción</h3>
+                <div style="position: relative; height:300px; width:100%">
+                    <canvas id="chartReproducciones"></canvas>
+                </div>
+            </div>
+
+            <div class="top-card">
+                <h3 style="color: #fff; margin-top: 0; margin-bottom: 15px; font-size: 18px;">⭐ Top 3 Canciones</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Puesto</th>
+                            <th>Canción</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in datos_top_canciones %}
+                        <tr>
+                            <td>
+                                {% if forloop.counter == 1 %}<span class="podium-1">🥇 1°</span>
+                                {% elif forloop.counter == 2 %}<span class="podium-2">🥈 2°</span>
+                                {% elif forloop.counter == 3 %}<span class="podium-3">🥉 3°</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-weight: 500;">{{ item.nombre }}</td>
+                            <td style="color: #1ed760; font-weight: bold;">{{ item.total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; color: #b3b3b3; padding: 20px;">Sin registros suficientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    {{ lista_canciones_nombres|json_script:"datos-nombres" }}
+    {{ lista_canciones_repros|json_script:"datos-repros" }}
+
+    <script>
+        // Obtenemos los datos desde los json_script de Django
+        const nombresCanciones = JSON.parse(document.getElementById('datos-nombres').textContent);
+        const cantidadReproducciones = JSON.parse(document.getElementById('datos-repros').textContent);
+
+        const ctx = document.getElementById('chartReproducciones').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: nombresCanciones,
+                datasets: [{
+                    label: 'Número de Reproducciones',
+                    data: cantidadReproducciones,
+                    backgroundColor: 'rgba(30, 215, 96, 0.2)', 
+                    borderColor: '#1ed760',                    
+                    borderWidth: 2,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#282828' }, ticks: { color: '#b3b3b3' } },
+                    x: { grid: { display: false }, ticks: { color: '#b3b3b3' } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

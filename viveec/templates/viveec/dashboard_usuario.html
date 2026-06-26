@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Usuario - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+</head>
+<body class="dashboard-body"> 
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Oyente</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-usuario/" class="nav-item active">Inicio</a>
+                <a href="/descubrir-albumes/" class="nav-item">Descubrir</a>
+                <a href="/biblioteca-usuario/" class="nav-item">Mi Biblioteca</a>
+                <a href="/suscripcion-usuario/" class="nav-item">Suscripción</a>
+                <a href="/reportes-usuario/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px; display: flex; flex-direction: column; gap: 40px;">
+        <div class="welcome-card">
+            <h1>¡Bienvenido a tu espacio, {{ nombre }}!</h1>
+            <p>Explora música a tu medida, gestiona tus listas colaborativas y revisa las estadísticas de tus hábitos de escucha.</p>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">
+                Recomendado para ti (Basado en tus gustos)
+            </h2>
+            <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for rec in recomendaciones %}
+                <div class="album-card" 
+                     style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                     onmouseover="this.style.backgroundColor='#282828'" 
+                     onmouseout="this.style.backgroundColor='#181818'"
+                     onclick="reproducirCancion('{{ rec.idCancion }}')">
+                    
+                    <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #1ed760 0%, #0d421d 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">
+                        🎵
+                    </div>
+                    
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ rec.Recomendacion }}
+                    </h3>
+                    
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ rec.Artista }}
+                    </p>
+                </div>
+                {% empty %}
+                <div style="grid-column: 1/-1; text-align: center; color: #b3b3b3; padding: 40px; background: #161616; border-radius: 8px;">
+                    Reproduce tus primeras canciones del catálogo para empezar a recibir recomendaciones.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">
+                Tus Álbumes Guardados
+            </h2>
+            <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for alb in albumes %}
+                <div class="album-card" 
+                     style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                     onmouseover="this.style.backgroundColor='#282828'" 
+                     onmouseout="this.style.backgroundColor='#181818'"
+                     onclick="verDetalleAlbum('{{ alb.id_album }}')"> <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #1ed760 0%, #122c19 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">
+                        💿
+                    </div>
+                    
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ alb.nombre_album }}
+                    </h3>
+                    
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ alb.artista }}
+                    </p>
+                </div>
+                {% empty %}
+                <div style="grid-column: 1/-1; text-align: center; color: #b3b3b3; padding: 40px; background: #161616; border-radius: 8px;">
+                    No has guardado ningún álbum todavía en tu biblioteca.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 15px;">
+                Tus artistas favoritos
+            </h2>
+            <div class="artists-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+                {% for art in artistas %}
+                <div class="artist-card" 
+                     style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" 
+                     onmouseover="this.style.backgroundColor='#282828'" 
+                     onmouseout="this.style.backgroundColor='#181818'"
+                     onclick="verDetalleArtista('{{ art.id_artista }}')">
+                    
+                    <div class="artist-avatar" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #22c55e 0%, #0a2211 100%); border-radius: 50%; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.5);">
+                        👤
+                    </div>
+                    
+                    <h3 style="color: #fff; margin: 0 0 4px 0; font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ art.nombre_artista }}
+                    </h3>
+                    
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px;">
+                        Artista
+                    </p>
+                </div>
+                {% empty %}
+                <div style="grid-column: 1/-1; text-align: center; color: #b3b3b3; padding: 40px; background: #161616; border-radius: 8px;">
+                    Aún no sigues a ningún artista. ¡Explora el catálogo para agregar tus favoritos!
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function reproducirCancion(idCancion) {
+            window.location.href = '/reproducir/' + idCancion + '/';
+        }
+
+        function verDetalleAlbum(idAlbum) {
+            window.location.href = '/album/' + idAlbum + '/';
+        }
+
+        function verDetalleArtista(idArtista) {
+            window.location.href = '/artista/' + idArtista + '/'; 
+        }
+
+        // Script para recargar el dashboard si hubo cambios en los detalles
+        window.onload = function() {
+            if (sessionStorage.getItem('debeRecargar') === 'true') {
+                sessionStorage.removeItem('debeRecargar');
+                location.reload();
+            }
+        };
+    </script>
+</body>
+</html>

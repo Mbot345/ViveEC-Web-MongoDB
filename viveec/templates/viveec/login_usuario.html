@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Usuario</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="brand-section">
+            <h1>ViveEC</h1>
+            <p>Login Usuario</p>
+        </div>
+        
+        <div class="form-section">
+            {% if mensaje %}
+                <div class="alert alert-success">{{ mensaje }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="alert alert-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="correo">Correo:</label>
+                    <input type="email" id="correo" name="correo" required placeholder="ejemplo@correo.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required placeholder="********">
+                </div>
+
+                <button type="submit" class="btn-primary">Iniciar Sesión</button>
+            </form>
+
+            <div class="form-links">
+                <a href="/registro-usuario/" class="link-secondary">Registrarse como Usuario</a>
+                <a href="/login-artista/" class="link-accent">¿Eres Artista? Inicia Sesión aquí</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

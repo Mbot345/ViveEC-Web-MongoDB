@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ info_album.0 }} - ViveEC</title>
+    <style>
+        body { margin: 0; background-color: #121212; font-family: sans-serif; color: #fff; }
+        .album-header { background: linear-gradient(to bottom, #114b25, #121212); padding: 40px 32px; display: flex; gap: 24px; align-items: flex-end; }
+        .album-cover { width: 192px; height: 192px; background: linear-gradient(135deg, #1ed760, #082411); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 72px; box-shadow: 0 4px 60px rgba(0,0,0,0.5); }
+        
+        .btn-toggle { 
+            border: 1px solid #b3b3b3; 
+            background: transparent; 
+            color: #fff; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.2s;
+        }
+        .btn-toggle.agregado { background-color: #1ed760; color: #000; border-color: #1ed760; }
+        
+        .custom-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .custom-table th { padding: 12px; border-bottom: 1px solid #282828; color: #b3b3b3; text-align: left; font-size: 14px; }
+        .custom-table td { padding: 12px; color: #b3b3b3; border-bottom: 1px solid #1a1a1a; }
+    </style>
+</head>
+<body>
+
+    <header class="album-header">
+        <div class="album-cover">💿</div>
+        <div>
+            <span style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Álbum</span>
+            <h1 style="font-size: 48px; margin: 4px 0; font-weight: 900;">{{ info_album.0 }}</h1>
+            <p style="margin: 0; color: #b3b3b3; font-size: 14px;">
+                <strong>{{ info_album.1 }}</strong> • {{ info_album.2 }} • {{ canciones|length }} canciones
+            </p>
+        </div>
+    </header>
+
+    <main style="padding: 32px;">
+        <button id="btn-album" onclick="toggleAlbum('{{ idAlbum }}')" 
+                class="btn-toggle {% if ya_agregado %}agregado{% endif %}">
+            {% if ya_agregado %}Agregado{% else %}Agregar +{% endif %}
+        </button>
+
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Título</th>
+                    <th>Duración</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in canciones %}
+                <tr onmouseover="this.style.backgroundColor='#2a2a2a'" onmouseout="this.style.backgroundColor='transparent'">
+                    <td>{{ forloop.counter }}</td>
+                    
+                    <td style="font-weight: bold; color: #fff;">
+                        <a href="{% url 'reproducir_cancion_detalle' c.id %}" style="text-decoration: none; color: #fff; cursor: pointer;">
+                            {{ c.nombre }}
+                        </a>
+                    </td>
+                    
+                    <td>{{ c.duracion }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        function toggleAlbum(idAlbum) {
+            fetch('/toggle-album/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ 'idAlbum': idAlbum })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const btn = document.getElementById('btn-album');
+                if (data.estado === 'agregado') {
+                    btn.classList.add('agregado');
+                    btn.innerText = 'Agregado';
+                } else {
+                    btn.classList.remove('agregado');
+                    btn.innerText = 'Agregar +';
+                }
+                
+                // Marcamos que hubo un cambio para que el dashboard se refresque al volver
+                sessionStorage.setItem('debeRecargar', 'true');
+            });
+        }
+    </script>
+</body>
+</html>

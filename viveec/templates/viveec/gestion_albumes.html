@@ -1,0 +1,163 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Álbumes - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background-color: #181818; padding: 24px; border-radius: 8px; width: 100%; max-width: 500px; border: 1px solid #282828; color: #fff; }
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group input, .form-group select { background-color: #282828; border: 1px solid #3e3e3e; padding: 10px; border-radius: 4px; color: #fff; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+        .btn-secondary { background-color: transparent; color: #b3b3b3; border: none; cursor: pointer; font-weight: bold; }
+        .btn-card { background: none; border: none; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge">Artista</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-artista/" class="nav-item">Inicio</a>
+                <a href="/gestion-albumes/" class="nav-item active">Administrar Canciones</a>
+                <a href="/regalias-artista/" class="nav-item">Regalías</a>
+                <a href="/reportes-artista/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/login-artista/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px;">
+        
+        {% if error_formulario %}
+        <div style="background-color: #e74c3c; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
+            ⚠️ Error de Validación Base de Datos: {{ error_formulario }}
+        </div>
+        {% endif %}
+
+        <div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div>
+                <h1 style="color: #fff; margin: 0; font-size: 32px; font-weight: 800;">Mis Álbumes</h1>
+                <p style="color: #b3b3b3; margin: 5px 0 0 0;">Gestiona tus lanzamientos discográficos y sus pistas de audio.</p>
+            </div>
+            <button class="btn-primary" onclick="abrirModalAgregar()" style="background-color: #1ed760; color: #000; font-weight: bold; border: none; padding: 12px 24px; border-radius: 24px; cursor: pointer;">+ Crear Álbum</button>
+        </div>
+
+        <div class="albums-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px;">
+            {% for alb in albumes %}
+            <div class="album-card" style="background-color: #181818; padding: 16px; border-radius: 8px; transition: background-color 0.3s ease; cursor: pointer; border: 1px solid #282828;" onmouseover="this.style.backgroundColor='#282828'" onmouseout="this.style.backgroundColor='#181818'">
+                
+                <div onclick="window.location.href='/gestion-canciones/{{ alb.id_album }}/'">
+                    <div class="album-cover" style="width: 100%; aspect-ratio: 1; background: radial-gradient(circle, #1ed760 0%, #0d421d 100%); border-radius: 6px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);">
+                        💿
+                    </div>
+                    <h3 style="color: #fff; margin: 0 0 8px 0; font-size: 16px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ alb.nombreAlbum }}</h3>
+                    <p style="color: #a7a7a7; margin: 0; font-size: 14px;">{{ alb.anio_album }} • {{ alb.total_canciones }} canción{{ alb.total_canciones|pluralize:"es" }}</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; border-top: 1px solid #282828; padding-top: 8px;">
+                    <span style="color: #1ed760; font-size: 10px; font-family: monospace;">ID: {{ alb.id_album }}</span>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn-card" style="color: #1ed760;" onclick="event.stopPropagation(); abrirModalEditar('{{ alb.id_album }}', '{{ alb.nombreAlbum }}', '{{ alb.fecha_completa }}')">Editar</button>
+                        <button class="btn-card" style="color: #e74c3c;" onclick="event.stopPropagation(); abrirModalEliminar('{{ alb.id_album }}', '{{ alb.nombreAlbum }}')">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1/-1; text-align: center; color: #b3b3b3; padding: 40px;">
+                No has registrado ningún álbum todavía. ¡Crea el primero!
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <div id="modalAgregar" class="modal">
+        <div class="modal-content">
+            <h2>Crear Nuevo Álbum</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="agregar">
+                <div class="form-group">
+                    <label>Nombre del Álbum</label>
+                    <input type="text" name="nombreAlbum" required placeholder="Ej: Progreso 2 Sessions">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Lanzamiento</label>
+                    <input type="date" name="fechaLanzamiento" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#1ed760; color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Guardar Álbum</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <h2>Modificar Álbum</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar">
+                <div class="form-group">
+                    <label>ID Álbum</label>
+                    <input type="text" id="edit_id" name="idAlbum" readonly style="background-color: #121212; color: #a7a7a7;">
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Álbum</label>
+                    <input type="text" id="edit_nombre" name="nombreAlbum" required>
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Lanzamiento</label>
+                    <input type="date" id="edit_fecha" name="fechaLanzamiento" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#1ed760; color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEliminar" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #e74c3c;">¿Eliminar Álbum?</h2>
+            <p>¿Estás seguro de que deseas eliminar permanentemente el álbum <strong id="delete_nombre"></strong>?</p>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" id="delete_id" name="idAlbum">
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#e74c3c; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Eliminar Permanentemente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalAgregar() { document.getElementById('modalAgregar').style.display = 'flex'; }
+        function abrirModalEditar(id, nombre, fecha) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_fecha').value = fecha;
+            document.getElementById('modalEditar').style.display = 'flex';
+        }
+        function abrirModalEliminar(id, nombre) {
+            document.getElementById('delete_id').value = id;
+            document.getElementById('delete_nombre').innerText = nombre;
+            document.getElementById('modalEliminar').style.display = 'flex';
+        }
+        function cerrarModal(idModal) { document.getElementById(idModal).style.display = 'none'; }
+        window.onclick = function(event) { if (event.target.className === 'modal') event.target.style.display = 'none'; }
+    </script>
+</body>
+</html>

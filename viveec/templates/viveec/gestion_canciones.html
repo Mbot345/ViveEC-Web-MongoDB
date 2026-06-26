@@ -1,0 +1,268 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ info_album.0 }} - Detalles - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <style>
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background-color: #181818; padding: 24px; border-radius: 8px; width: 100%; max-width: 500px; border: 1px solid #282828; color: #fff; }
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .form-group input, .form-group select { background-color: #282828; border: 1px solid #3e3e3e; padding: 10px; border-radius: 4px; color: #fff; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
+        .btn-secondary { background-color: transparent; color: #b3b3b3; border: none; cursor: pointer; font-weight: bold; }
+        .btn-table { background: none; border: none; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 10px; }
+        .badge-genre { background-color: #282828; color: #b3b3b3; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    </style>
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge">Artista</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-artista/" class="nav-item">Inicio</a>
+                <a href="/gestion-albumes/" class="nav-item active">Administrar Canciones</a>
+                <a href="/regalias-artista/" class="nav-item">Regalías</a>
+                <a href="/reportes-artista/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/login-artista/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <header class="album-header-banner" style="background: linear-gradient(to bottom, #114b25, #121212); padding: 40px 32px; display: flex; gap: 24px; align-items: flex-end;">
+        <div class="album-large-cover" style="width: 192px; height: 192px; background: linear-gradient(135deg, #1ed760, #082411); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 72px; box-shadow: 0 4px 60px rgba(0,0,0,0.5);">
+            💿
+        </div>
+        <div class="album-header-info" style="color: #fff;">
+            <span style="font-size: 12px; font-weight: bold; text-transform: uppercase;">Álbum</span>
+            <h1 style="font-size: 48px; margin: 4px 0; font-weight: 900;">{{ info_album.0 }}</h1>
+            <p style="margin: 0; color: #b3b3b3; font-size: 14px;">
+                <strong>{{ nombre }}</strong> • {{ info_album.1 }} • {{ canciones|length }} canciones
+            </p>
+        </div>
+    </header>
+
+    <main class="dashboard-content" style="padding-top: 20px;">
+        
+        {% if error_formulario %}
+        <div style="background-color: #e74c3c; color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
+            ⚠️ Error de Validación Base de Datos: {{ error_formulario }}
+        </div>
+        {% endif %}
+
+        <div class="content-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a href="/gestion-albumes/" style="color: #1ed760; text-decoration: none; font-size: 14px; font-weight: bold;">← Volver a Álbumes</a>
+            <button class="btn-primary" onclick="abrirModalAgregar()" style="background-color: #1ed760; color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">+ Añadir Canción</button>
+        </div>
+
+        <div class="table-container">
+            <table class="custom-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #282828; color: #b3b3b3; font-size: 14px;">
+                        <th style="padding: 12px; width: 40px;">#</th>
+                        <th style="padding: 12px;">Título</th>
+                        <th style="padding: 12px;">Género</th> 
+                        <th style="padding: 12px;">Reproducciones</th>
+                        <th style="padding: 12px;">Duración</th>
+                        <th style="padding: 12px;">Calidad</th>
+                        <th style="padding: 12px;">Estado</th>
+                        <th style="padding: 12px; text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in canciones %}
+                    <tr style="border-bottom: 1px solid transparent;" onmouseover="this.style.backgroundColor='#2a2a2a'" onmouseout="this.style.backgroundColor='transparent'">
+                        <td style="padding: 12px; color: #b3b3b3;">{{ forloop.counter }}</td>
+                        <td style="padding: 12px;">
+                            <div style="font-weight: bold; color: #fff;">{{ c.nombre }}</div>
+                            <div style="font-size: 12px; color: #b3b3b3;">ID: {{ c.id }}</div>
+                        </td>
+                        <td style="padding: 12px;"><span class="badge-genre">{{ c.genero_nombre }}</span></td> 
+                        <td style="padding: 12px; color: #b3b3b3;">{{ c.reproducciones }}</td>
+                        <td style="padding: 12px; color: #b3b3b3;">{{ c.duracion }}s</td>
+                        <td style="padding: 12px;"><span class="badge-quality">{{ c.calidad }}</span></td>
+                        <td style="padding: 12px;">
+                            {% if c.estado == "Activo" %}
+                                <span style="color: #1ed760;">● {{ c.estado }}</span>
+                            {% else %}
+                                <span style="color: #a7a7a7;">● {{ c.estado }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 12px; text-align: right;">
+                            <button class="btn-table" style="color: #1ed760;" onclick="abrirModalEditar('{{ c.id }}', '{{ c.nombre }}', '{{ c.duracion }}', '{{ c.fecha }}', '{{ c.calidad }}', '{{ c.estado }}', '{{ c.genero_id }}')">Editar</button>
+                            <button class="btn-table" style="color: #e74c3c;" onclick="abrirModalEliminar('{{ c.id }}', '{{ c.nombre }}')">Eliminar</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #b3b3b3; padding: 30px;">Este álbum aún no tiene canciones cargadas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="modalAgregar" class="modal">
+        <div class="modal-content">
+            <h2>Añadir Nueva Canción</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="agregar">
+                
+                <div class="form-group">
+                    <label>Nombre de la Canción</label>
+                    <input type="text" name="nombre" required placeholder="Título de la pista">
+                </div>
+                <div class="form-group">
+                    <label>Género Musical</label>
+                    <select name="genero" required>
+                        <option value="" disabled selected>-- Seleccione un género --</option>
+                        {% for gen in generos_disponibles %}
+                            <option value="{{ gen.id }}">{{ gen.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duración (en segundos)</label>
+                    <input type="number" name="duracion" required min="1" placeholder="Ej: 210">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Lanzamiento</label>
+                    <input type="date" name="fechaLanzamiento" required>
+                </div>
+                <div class="form-group">
+                    <label>Calidad de Audio</label>
+                    <select name="calidad">
+                        <option value="Estándar">Estándar</option>
+                        <option value="Alta" selected>Alta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado">
+                        <option value="Activo" selected>Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalAgregar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#1ed760; color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Guardar Canción</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <h2>Editar Canción</h2>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar">
+                
+                <div class="form-group">
+                    <label>ID Canción</label>
+                    <input type="text" id="edit_id" name="idCancion" readonly style="background-color: #121212; color: #a7a7a7;">
+                </div>
+                <div class="form-group">
+                    <label>Nombre de la Canción</label>
+                    <input type="text" id="edit_nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Género Musical</label>
+                    <select id="edit_genero" name="genero" required>
+                        {% for gen in generos_disponibles %}
+                            <option value="{{ gen.id }}">{{ gen.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Duración (en segundos)</label>
+                    <input type="number" id="edit_duracion" name="duracion" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Lanzamiento</label>
+                    <input type="date" id="edit_fecha" name="fechaLanzamiento" required>
+                </div>
+                <div class="form-group">
+                    <label>Calidad de Audio</label>
+                    <select id="edit_calidad" name="calidad">
+                        <option value="Estándar">Estándar</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="edit_estado" name="estado">
+                        <option value="Activo">Activo</option>
+                        <option value="Inactivo">Inactivo</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalEditar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#1ed760; color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Actualizar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEliminar" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #e74c3c;">¿Eliminar Canción?</h2>
+            <p>¿Estás seguro de que deseas eliminar permanentemente la canción <strong id="delete_nombre"></strong>? Esta acción no se puede deshacer en la base de datos.</p>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="eliminar">
+                <input type="hidden" id="delete_id" name="idCancion">
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="cerrarModal('modalEliminar')">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="background-color:#e74c3c; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer;">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModalAgregar() {
+            document.getElementById('modalAgregar').style.display = 'flex';
+        }
+        
+        function abrirModalEditar(id, nombre, duracion, fecha, calidad, estado, idGenero) {
+            document.getElementById('edit_id').value = id;
+            document.getElementById('edit_nombre').value = nombre;
+            document.getElementById('edit_duracion').value = duracion;
+            document.getElementById('edit_fecha').value = fecha;
+            document.getElementById('edit_calidad').value = calidad;
+            document.getElementById('edit_estado').value = estado;
+            document.getElementById('edit_genero').value = idGenero;
+            document.getElementById('modalEditar').style.display = 'flex';
+        }
+
+        function abrirModalEliminar(id, nombre) {
+            document.getElementById('delete_id').value = id;
+            document.getElementById('delete_nombre').innerText = nombre;
+            document.getElementById('modalEliminar').style.display = 'flex';
+        }
+
+        function cerrarModal(idModal) {
+            document.getElementById(idModal).style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Regalías - ViveEC</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    <style>
+        .metrics-container { display: flex; gap: 24px; margin-bottom: 32px; }
+        .metric-card { background-color: #181818; border: 1px solid #282828; padding: 24px; border-radius: 8px; flex: 1; }
+        .metric-value { font-size: 36px; font-weight: 800; color: #1ed760; margin-top: 8px; }
+        .table-container { background-color: #181818; border: 1px solid #282828; border-radius: 8px; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; color: #fff; }
+        th { padding: 14px; border-bottom: 1px solid #3e3e3e; color: #b3b3b3; font-size: 13px; text-transform: uppercase; }
+        td { padding: 14px; border-bottom: 1px solid #282828; font-size: 14px; }
+        tr:hover { background-color: #282828; }
+    </style>
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="navbar-left">
+            <span class="navbar-logo">ViveEC</span>
+            <span class="navbar-badge">Artista</span>
+            <div class="navbar-menu">
+                <a href="/dashboard-artista/" class="nav-item">Inicio</a>
+                <a href="/gestion-albumes/" class="nav-item">Administrar Canciones</a>
+                <a href="/regalias-artista/" class="nav-item active">Regalías</a>
+                <a href="/reportes-artista/" class="nav-item">Reportes</a>
+            </div>
+        </div>
+        <div class="navbar-right">
+            <span class="user-greeting">Hola, <strong>{{ nombre }}</strong></span>
+            <a href="/login-artista/" class="btn-logout">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-content" style="padding: 40px 32px;">
+        <div class="content-header" style="margin-bottom: 30px;">
+            <h1 style="color: #fff; margin: 0; font-size: 32px; font-weight: 800;">Balance de Regalías</h1>
+            <p style="color: #b3b3b3; margin: 5px 0 0 0;">Tus estados de cuenta mensuales consolidados y procesados por el motor de base de datos.</p>
+        </div>
+
+        <div class="metrics-container">
+            <div class="metric-card">
+                <span style="color: #b3b3b3; font-size: 14px; font-weight: bold;">Ingresos Totales Acumulados</span>
+                <div class="metric-value">${{ total_ganado|floatformat:2 }}</div>
+            </div>
+            <div class="metric-card">
+                <span style="color: #b3b3b3; font-size: 14px; font-weight: bold;">Reproducciones Contabilizadas</span>
+                <div class="metric-value" style="color: #fff;">{{ total_reproducciones }}</div>
+            </div>
+        </div>
+
+        <h2 style="color: #fff; font-size: 20px; margin-bottom: 16px;">Historial de Cierres de Mes</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Cierre</th>
+                        <th>Periodo Desde</th>
+                        <th>Periodo Hasta</th>
+                        <th>Reproducciones Obtenidas</th>
+                        <th>Monto Calculado</th>
+                        <th>Fecha Registro</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in regalias %}
+                    <tr>
+                        <td style="color: #1ed760; font-weight: bold;">{{ reg.idRegalia }}</td>
+                        <td>{{ reg.fechaInicio }}</td>
+                        <td>{{ reg.fechaFin }}</td>
+                        <td>{{ reg.totalReproducciones }} reproducciones </td>
+                        <td style="color: #1ed760; font-weight: bold;">${{ reg.montoTotal|floatformat:2 }}</td>
+                        <td>{{ reg.fechaPago }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #b3b3b3; padding: 30px;">
+                            No existen cierres de mes registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Usuario</title>
+    <link rel="stylesheet" href="{% static 'viveec/css/styles.css' %}">
+    
+    <style>
+        .modal-overlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-content { background-color: #121212; border: 1px solid #282828; padding: 35px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); }
+        .modal-icon { font-size: 50px; color: #1ed760; margin-bottom: 15px; }
+        .modal-content h2 { color: #fff; font-size: 24px; margin-bottom: 10px; }
+        .modal-content p { color: #b3b3b3; font-size: 15px; margin-bottom: 25px; }
+        .btn-modal { background-color: #1ed760; color: #000; font-weight: bold; border: none; padding: 12px 35px; border-radius: 24px; cursor: pointer; font-size: 15px; transition: transform 0.2s ease; }
+        .btn-modal:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+    {% if registro_exitoso %}
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">✓</div>
+            <h2>¡Registro Exitoso!</h2>
+            <p>El usuario ha sido registrado correctamente.</p>
+            <button class="btn-modal" onclick="redireccionarLogin()">Aceptar</button>
+        </div>
+    </div>
+    <script>
+        function redireccionarLogin() { window.location.href = "/"; }
+    </script>
+    {% endif %}
+
+    <div class="login-container format-register">
+        <div class="brand-section">
+            <h1>Registro</h1>
+            <p>de Usuario</p>
+        </div>
+        
+        <div class="form-section">
+            {% if error %}
+                <div class="alert alert-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre completo">
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo:</label>
+                    <input type="email" id="correo" name="correo" required placeholder="ejemplo@correo.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <input type="password" id="password" name="password" required placeholder="Contraseña">
+                </div>
+                <div class="form-group">
+                    <label for="pais">País:</label>
+                    <select id="pais" name="pais" required style="width: 100%; padding: 10px; background: #282828; color: white; border: 1px solid #333; border-radius: 4px;">
+                        <option value="" disabled selected>Selecciona tu país</option>
+                        <option value="Ecuador">Ecuador</option>
+                        <option value="Colombia">Colombia</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="España">España</option>
+                        <option value="México">México</option>
+                        <option value="Chile">Chile</option>
+                        <option value="Perú">Perú</option>
+                        <option value="Uruguay">Uruguay</option>
+                        <option value="USA">USA</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Registrar Usuario</button>
+            </form>
+
+            <div class="form-links">
+                <a href="/" class="link-secondary">Volver al Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

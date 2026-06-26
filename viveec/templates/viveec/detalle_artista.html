@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ artista.nombre }} - ViveEC</title>
+    <style>
+        body { margin: 0; background-color: #121212; font-family: sans-serif; color: #fff; }
+        
+        .artist-header { background: linear-gradient(to bottom, #114b25, #121212); padding: 40px 32px; display: flex; gap: 24px; align-items: flex-end; }
+        
+        .artist-avatar { 
+            width: 192px; height: 192px; 
+            background: radial-gradient(circle, #22c55e 0%, #0a2211 100%); 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 80px; 
+            box-shadow: 0 4px 60px rgba(0,0,0,0.5); 
+        }
+        
+        .btn-toggle { 
+            border: 1px solid #b3b3b3; 
+            background: transparent; 
+            color: #fff; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+        .btn-toggle.siguiendo { background-color: #1ed760; color: #000; border-color: #1ed760; }
+    </style>
+</head>
+<body>
+
+    <header class="artist-header" style="display: flex; align-items: flex-end; gap: 24px; padding: 40px 32px; background: linear-gradient(to bottom, #114b25, #121212);">
+        <div class="artist-avatar" style="width: 192px; height: 192px; background: radial-gradient(circle, #22c55e 0%, #0a2211 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 80px; box-shadow: 0 4px 60px rgba(0,0,0,0.5);">👤</div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+            <div>
+                <span style="font-size: 12px; font-weight: bold; text-transform: uppercase;">ARTISTA</span>
+                <h1 style="font-size: 48px; margin: 4px 0; font-weight: 900;">{{ artista.nombre }}</h1>
+            </div>
+            
+            <button id="btn-seguir" onclick="toggleSeguir('{{ artista.id }}')" 
+                    class="btn-toggle {% if ya_sigue %}siguiendo{% endif %}" 
+                    style="margin-top: 0;">
+                {% if ya_sigue %}Siguiendo{% else %}Seguir{% endif %}
+            </button>
+        </div>
+    </header>
+
+    <script>
+    function toggleSeguir(idArtista) {
+        fetch('/toggle-seguir-artista/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            body: JSON.stringify({ 'idArtista': idArtista })
+        })
+        .then(r => r.json())
+        .then(data => {
+            const btn = document.getElementById('btn-seguir');
+            if (data.estado === 'seguido') {
+                btn.classList.add('siguiendo');
+                btn.innerText = 'Siguiendo';
+            } else {
+                btn.classList.remove('siguiendo');
+                btn.innerText = 'Seguir';
+            }
+            
+            // Marcamos que hubo un cambio para que el dashboard se refresque al volver
+            sessionStorage.setItem('debeRecargar', 'true');
+        });
+    }
+    </script>
+</body>
+</html>
