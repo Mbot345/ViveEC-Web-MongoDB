@@ -29,7 +29,7 @@ def login_usuario(request):
         if usuario:
             
             request.session['usuario_nombre'] = usuario.get('nombreUsuario')
-            return redirect('dashboard_usuario') # Usamos el nombre del path
+            return redirect('dashboard_usuario') 
             
         else:
             return render(request, 'viveec/login_usuario.html', {
